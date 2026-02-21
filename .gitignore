@@ -1,0 +1,22 @@
+# Environments
+venv/
+.env
+__pycache__/
+*.pyc
+
+# Node modules
+frontend/node_modules/
+frontend/dist/
+.vite/
+
+# Large datasets and temp files
+temp_audio/
+reports/
+model/dataset/
+model/dataset_repo/
+model/dataset_extracted/
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db
