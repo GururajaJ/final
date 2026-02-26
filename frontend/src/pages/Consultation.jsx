@@ -1,0 +1,199 @@
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { FaUserMd, FaArrowLeft, FaSpinner, FaExclamationTriangle, FaHeartbeat, FaClipboardList, FaLeaf, FaAmbulance, FaMicrophone } from 'react-icons/fa';
+import ReactMarkdown from 'react-markdown';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:8000';
+
+export default function Consultation() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [consultationText, setConsultationText] = useState(null);
+    const [error, setError] = useState(null);
+
+    // Get the prediction data passed from the Prediction page
+    const predictionData = location.state?.predictionData;
+
+    useEffect(() => {
+        if (!predictionData) {
+            setLoading(false);
+            return;
+        }
+
+        const fetchConsultation = async () => {
+            try {
+                const response = await axios.post(`${API_URL}/consult`, predictionData);
+                setConsultationText(response.data.consultation);
+            } catch (err) {
+                console.error(err);
+                setError(err.response?.data?.detail || 'An error occurred while connecting to the AI Doctor. Please check if the backend is running and the Gemini API key is configured correctly.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchConsultation();
+    }, [predictionData, navigate]);
+
+    // Custom components for Markdown rendering to apply Tailwind styling
+    const MarkdownComponents = {
+        h2: ({ node, ...props }) => {
+            // Add icons based on the section title
+            let Icon = null;
+            if (props.children.toString().includes('Summary')) Icon = FaHeartbeat;
+            else if (props.children.toString().includes('Recommended')) Icon = FaClipboardList;
+            else if (props.children.toString().includes('Lifestyle')) Icon = FaLeaf;
+            else if (props.children.toString().includes('Seek')) Icon = FaAmbulance;
+
+            return (
+                <div className="flex items-center mt-10 mb-4 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                    {Icon && <Icon className="text-emerald-600 text-2xl mr-3" />}
+                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight m-0" {...props} />
+                </div>
+            );
+        },
+        h3: ({ node, ...props }) => <h3 className="text-xl font-semibold text-slate-800 mt-6 mb-3" {...props} />,
+        p: ({ node, ...props }) => <p className="text-slate-600 leading-relaxed mb-4 text-lg" {...props} />,
+        ul: ({ node, ...props }) => <ul className="list-disc list-outside ml-6 mb-6 space-y-2 text-slate-600 text-lg" {...props} />,
+        ol: ({ node, ...props }) => <ol className="list-decimal list-outside ml-6 mb-6 space-y-2 text-slate-600 text-lg" {...props} />,
+        li: ({ node, ...props }) => <li className="pl-2 marker:text-emerald-500" {...props} />,
+        strong: ({ node, ...props }) => <strong className="font-semibold text-slate-900" {...props} />
+    };
+
+    return (
+        <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-12">
+
+            {/* Header Area */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center">
+                        <FaUserMd className="text-emerald-600 mr-4 text-4xl bg-emerald-100 p-2 rounded-xl" />
+                        AI Doctor Consultation
+                    </h1>
+                    <p className="mt-2 text-slate-600 text-lg ml-14">Personalized neuro-medical guidance based on your acoustic analysis.</p>
+                </div>
+                <button
+                    onClick={() => navigate('/predict')}
+                    className="flex items-center px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm"
+                >
+                    <FaArrowLeft className="mr-2" /> Back to Analysis
+                </button>
+            </div>
+
+            {/* Medical Disclaimer Banner */}
+            <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl">
+                <div className="flex">
+                    <div className="flex-shrink-0">
+                        <FaExclamationTriangle className="h-5 w-5 text-amber-500" aria-hidden="true" />
+                    </div>
+                    <div className="ml-3">
+                        <h3 className="text-sm font-medium text-amber-800">Medical Disclaimer</h3>
+                        <div className="mt-1 text-sm text-amber-700">
+                            <p>
+                                This AI consultation is generated by a large language model based on acoustic screening algorithms. It is <strong>NOT</strong> a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or qualified health provider with any questions regarding a medical condition.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Content Area */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px]">
+
+                {/* Result Summary Bar at the top */}
+                {predictionData && (
+                    <div className="bg-slate-50 border-b border-slate-100 p-8 flex flex-col md:flex-row gap-8 items-center justify-between">
+                        <div className="space-y-4 flex-1 w-full">
+                            <h3 className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">Patient Diagnostic Report</h3>
+
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Automated Consensus</span>
+                                <span className="text-xl font-bold text-slate-900 bg-white px-4 py-1 rounded-lg border border-slate-200 shadow-sm">{predictionData.prediction}</span>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Stratification Level</span>
+                                <span className={`px-4 py-1.5 rounded-xl text-sm font-bold border shadow-sm
+                                    ${predictionData.risk_level === 'Low' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' :
+                                        predictionData.risk_level === 'Moderate' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                                            predictionData.risk_level === 'High' ? 'bg-orange-100 text-orange-800 border-orange-200' :
+                                                'bg-rose-100 text-rose-800 border-rose-200'}`}
+                                >
+                                    {predictionData.risk_level.toUpperCase()} RISK
+                                </span>
+                            </div>
+
+                            <div className="pt-2">
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="font-semibold text-slate-700">Algorithmic Confidence</span>
+                                    <span className="font-bold text-slate-900">{predictionData.confidence}</span>
+                                </div>
+                                <div className="w-full bg-slate-200 rounded-full h-3 shadow-inner">
+                                    <div
+                                        className={`h-3 rounded-full transition-all duration-1000 ease-out ${predictionData.probability > 0.5 ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                                        style={{ width: `${predictionData.probability * 100}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="hidden md:block w-px h-32 bg-slate-200 mx-4"></div>
+
+                        <div className="flex flex-col items-center justify-center flex-1 w-full bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                            <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">AI Assessment Scope</h4>
+                            <p className="text-sm text-slate-600 text-center leading-relaxed">
+                                The AI Doctor is analyzing the acoustic biomarkers above to generate a personalized medical consultation, including clinical interpretation and recommended next steps.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                <div className="p-8 md:p-12">
+                    {!predictionData ? (
+                        <div className="flex flex-col items-center justify-center h-full py-16 text-slate-500">
+                            <div className="bg-slate-50 p-6 rounded-full border border-slate-100 mb-6">
+                                <FaMicrophone className="text-4xl text-slate-400" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-700 mb-3">No Analysis Data Available</h2>
+                            <p className="text-lg text-slate-500 text-center max-w-md mb-8">
+                                To generate a personalized AI Doctor Consultation, you must first run an acoustic analysis on a clinical voice recording.
+                            </p>
+                            <button
+                                onClick={() => navigate('/predict')}
+                                className="px-8 py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 transition shadow-sm hover:shadow"
+                            >
+                                Go to Voice Analysis
+                            </button>
+                        </div>
+                    ) : loading ? (
+                        <div className="flex flex-col items-center justify-center h-full py-20 text-emerald-600">
+                            <FaSpinner className="animate-spin text-5xl mb-6" />
+                            <p className="text-xl font-semibold text-slate-700 animate-pulse">The AI Doctor is reviewing your results...</p>
+                            <p className="text-slate-500 mt-2">Generating personalized medical insights and recommendations.</p>
+                        </div>
+                    ) : error ? (
+                        <div className="bg-rose-50 border border-rose-200 p-8 rounded-2xl text-center">
+                            <FaExclamationTriangle className="text-rose-500 text-5xl mx-auto mb-4" />
+                            <h3 className="text-xl font-bold text-rose-800 mb-2">Consultation Failed</h3>
+                            <p className="text-rose-600">{error}</p>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="mt-6 px-6 py-2 bg-rose-600 text-white font-semibold rounded-lg hover:bg-rose-700 transition"
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    ) : consultationText ? (
+                        <div className="prose prose-lg max-w-none text-slate-700">
+                            <ReactMarkdown components={MarkdownComponents}>
+                                {consultationText}
+                            </ReactMarkdown>
+                        </div>
+                    ) : null}
+                </div>
+            </div>
+        </div>
+    );
+}

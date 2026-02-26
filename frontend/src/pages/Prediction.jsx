@@ -1,12 +1,14 @@
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FaCloudUploadAlt, FaFileAudio, FaSpinner, FaDownload } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaCloudUploadAlt, FaFileAudio, FaSpinner, FaDownload, FaUserMd, FaExclamationTriangle } from 'react-icons/fa';
 import axios from 'axios';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 const API_URL = 'http://localhost:8000';
 
 export default function Prediction() {
+    const navigate = useNavigate();
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
@@ -14,18 +16,18 @@ export default function Prediction() {
 
     const onDrop = useCallback(acceptedFiles => {
         const audioFile = acceptedFiles[0];
-        if (audioFile && audioFile.name.endsWith('.wav')) {
+        if (audioFile) {
             setFile(audioFile);
             setError(null);
             setResult(null);
         } else {
-            setError('Invalid file format. Please upload a .wav audio file.');
+            setError('Invalid file format. Please upload a valid audio file.');
         }
     }, []);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
-        accept: { 'audio/wav': ['.wav'] },
+        accept: { 'audio/*': ['.wav', '.mp3', '.ogg', '.flac', '.aac', '.m4a', '.wma'] },
         maxFiles: 1
     });
 
@@ -92,7 +94,7 @@ export default function Prediction() {
         <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
             <div>
                 <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Acoustic Analysis</h1>
-                <p className="mt-2 text-slate-600 text-lg">Upload a patient's voice recording (.wav) to analyze acoustic biomarkers for Parkinson's Disease.</p>
+                <p className="mt-2 text-slate-600 text-lg">Upload a patient's voice recording (.wav, .mp3, .m4a, etc) to analyze acoustic biomarkers for Parkinson's Disease.</p>
             </div>
 
             <div
@@ -125,7 +127,7 @@ export default function Prediction() {
                         <p className="text-2xl font-semibold text-slate-800">Drag & drop clinical voice file here</p>
                         <p className="text-base text-slate-500 mt-2">or click to browse from your computer</p>
                         <div className="mt-8 px-6 py-3 bg-white border border-slate-200 rounded-xl shadow-sm text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all">
-                            Select Audio (.wav)
+                            Select Audio File
                         </div>
                     </div>
                 )}
@@ -157,14 +159,22 @@ export default function Prediction() {
 
             {result && (
                 <div className="bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden mt-8 animate-fade-in">
-                    <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <div className="px-8 py-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center bg-slate-50/50 gap-4">
                         <h2 className="text-xl font-bold text-slate-900">Diagnostic Results</h2>
-                        <button
-                            onClick={downloadReport}
-                            className="flex items-center text-sm font-semibold text-brand-700 hover:text-brand-800 bg-white border border-brand-200 shadow-sm hover:shadow hover:bg-brand-50 px-5 py-2.5 rounded-xl transition-all"
-                        >
-                            <FaDownload className="mr-2" /> Download Clinical Report
-                        </button>
+                        <div className="flex flex-wrap gap-4">
+                            <button
+                                onClick={() => navigate('/consult', { state: { predictionData: result } })}
+                                className="flex items-center text-sm font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 border border-emerald-200 shadow-sm hover:shadow hover:bg-emerald-100 px-5 py-2.5 rounded-xl transition-all"
+                            >
+                                <FaUserMd className="mr-2 text-lg" /> Get AI Consultation
+                            </button>
+                            <button
+                                onClick={downloadReport}
+                                className="flex items-center text-sm font-semibold text-brand-700 hover:text-brand-800 bg-white border border-brand-200 shadow-sm hover:shadow hover:bg-brand-50 px-5 py-2.5 rounded-xl transition-all"
+                            >
+                                <FaDownload className="mr-2" /> Download Clinical Report
+                            </button>
+                        </div>
                     </div>
 
                     <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">

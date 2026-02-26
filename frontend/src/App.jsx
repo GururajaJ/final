@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Prediction from './pages/Prediction';
+import Consultation from './pages/Consultation';
 import Analysis from './pages/Analysis';
 import About from './pages/About';
 
@@ -13,6 +14,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/predict" element={<Prediction />} />
+                    <Route path="/consult" element={<Consultation />} />
                     <Route path="/analysis" element={<Analysis />} />
                     <Route path="/about" element={<About />} />
                 </Routes>

@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FaStethoscope, FaChartBar, FaMicrophone, FaInfoCircle } from 'react-icons/fa';
+import { FaStethoscope, FaChartBar, FaMicrophone, FaInfoCircle, FaUserMd } from 'react-icons/fa';
 import clsx from 'clsx';
 
 export default function Navbar() {
@@ -9,6 +9,7 @@ export default function Navbar() {
         { name: 'Dashboard', path: '/', icon: FaStethoscope },
         { name: 'Voice Analysis', path: '/predict', icon: FaMicrophone },
         { name: 'Model Stats', path: '/analysis', icon: FaChartBar },
+        { name: 'AI Consultation', path: '/consult', icon: FaUserMd },
         { name: 'About', path: '/about', icon: FaInfoCircle },
     ];
 
